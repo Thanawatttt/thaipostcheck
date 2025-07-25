@@ -1,0 +1,20 @@
+{
+  "name": "thaicheckpost",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "start": "bunx electron ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "electron": "^37.2.4"
+  }
+}

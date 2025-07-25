@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>เช็คพัสดุไปรษณีย์ไทย</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="search-section">
+    <h2>เช็คสถานะพัสดุไปรษณีย์ไทย</h2>
+    <textarea id="track-input" placeholder="กรอกเลขพัสดุ (ใส่ได้หลายเลข, Enter หรือ , หรือ Space คั่น)" rows="3"></textarea>
+    <button id="track-btn">เช็คสถานะ</button>
+  </div>
+  <div id="result-section" style="display:none;">
+    <button id="back-btn">ย้อนกลับ</button>
+    <div id="print-controls">
+      <button id="preview-btn">ดูตัวอย่างก่อนพิมพ์</button>
+      <button id="print-btn">ปริ้น</button>
+      <button id="setting-btn">Setting</button>
+    </div>
+    <div id="timeline"></div>
+  </div>
+  <div id="print-preview-modal" style="display:none;">
+    <div class="print-preview-content">
+      <button id="close-preview-btn">ปิด</button>
+      <div id="print-preview-pages"></div>
+    </div>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html> 
