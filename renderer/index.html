@@ -9,23 +9,27 @@
   <div id="search-section">
     <h2>เช็คสถานะพัสดุไปรษณีย์ไทย</h2>
     <textarea id="track-input" placeholder="กรอกเลขพัสดุ (ใส่ได้หลายเลข, Enter หรือ , หรือ Space คั่น)" rows="3"></textarea>
-    <button id="track-btn">เช็คสถานะ</button>
+    <div class="button-container">
+      <button id="track-btn" class="btn">เช็คสถานะ</button>
+      <button id="import-excel-btn" class="btn">นำเข้าไฟล์ Excel</button>
+      <button id="import-pdf-btn" class="btn">นำเข้าไฟล์ PDF</button>
+    </div>
   </div>
   <div id="result-section" style="display:none;">
     <button id="back-btn">ย้อนกลับ</button>
     <div id="print-controls">
       <button id="preview-btn">ดูตัวอย่างก่อนพิมพ์</button>
-      <button id="print-btn">ปริ้น</button>
+      <button id="print-btn">บันทึกเป็น PDF</button>
       <button id="setting-btn">Setting</button>
     </div>
     <div id="timeline"></div>
   </div>
   <div id="print-preview-modal" style="display:none;">
     <div class="print-preview-content">
-      <button id="close-preview-btn">ปิด</button>
+      <button id="close-preview-btn">✕</button>
       <div id="print-preview-pages"></div>
     </div>
   </div>
   <script src="index.js"></script>
 </body>
-</html> 
+</html>

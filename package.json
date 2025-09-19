@@ -1,20 +1,45 @@
 {
   "name": "thaicheckpost",
+  "version": "2.3.1",
+  "description": "Thailand Post Checker App",
+  "author": "thanawattawilha",
   "module": "index.ts",
   "type": "module",
   "private": true,
   "main": "main.cjs",
   "scripts": {
-    "start": "bunx electron ."
+    "start": "bunx electron .",
+    "build": "electron-builder",
+    "dist": "electron-builder --win",
+    "package": "node build.js"
+  },
+  "build": {
+    "appId": "com.thaipostcheck.app",
+    "productName": "Thai Post Check",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico"
+    }
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "electron-builder": "^26.0.12"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "axios": "^1.11.0",
-    "electron": "^37.2.4"
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.17.2",
+    "xlsx": "^0.18.5"
   }
 }

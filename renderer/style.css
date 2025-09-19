@@ -14,32 +14,39 @@ h2 {
   max-width: 900px;
 }
 #search-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
+  text-align: center;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin: 20px;
 }
+
 #search-section h2 {
-  font-size: 2.2em;
-  margin-bottom: 32px;
+  color: #009900;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
+
 #track-input {
-  font-size: 1.3em;
-  padding: 18px 32px;
-  border-radius: 16px;
-  border: 2.5px solid #009900;
-  margin-bottom: 18px;
-  width: 600px;
-  max-width: 98vw;
-  min-height: 60px;
-  box-shadow: 0 2px 12px #00990011;
+  width: 100%;
+  max-width: 600px;
+  height: 120px;
+  padding: 15px;
+  border: 2px solid #009900;
+  border-radius: 12px;
+  font-size: 1.1em;
+  font-family: 'Sarabun', 'Prompt', 'Segoe UI', Arial, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 153, 0, 0.1);
   resize: vertical;
-  transition: box-shadow 0.3s, border 0.3s;
+  margin-bottom: 20px;
 }
+
 #track-input:focus {
-  box-shadow: 0 4px 24px #00990033;
+  outline: none;
   border-color: #4CAF50;
+  box-shadow: 0 2px 12px rgba(0, 153, 0, 0.2);
 }
 .fade-in {
   animation: fadeIn 0.5s cubic-bezier(.4,0,.2,1) both;
@@ -55,29 +62,73 @@ h2 {
   from { opacity: 1; transform: none;}
   to   { opacity: 0; transform: translateY(-40px) scale(0.98);}
 }
-@media (max-width: 700px) {
-  #track-input {
-    width: 98vw;
-    font-size: 1.1em;
-    padding: 12px 8px;
-  }
-}
-#track-btn {
-  font-size: 1.2em;
-  padding: 16px 48px;
-  border-radius: 16px;
-  background: linear-gradient(90deg, #009900 60%, #4CAF50 100%);
-  color: #fff;
-  font-weight: bold;
+/* Close button for modal */
+#close-preview-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #f44336;
+  color: white;
   border: none;
-  box-shadow: 0 2px 12px #00990022;
-  margin-bottom: 8px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
+
+#close-preview-btn:hover {
+  background: #d32f2f;
+}
+/* Button container */
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+/* Base button styles */
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Track button */
+#track-btn {
+  background: linear-gradient(135deg, #009900 0%, #4CAF50 100%);
+  color: white;
+}
+
 #track-btn:hover {
-  background: linear-gradient(90deg, #4CAF50 60%, #009900 100%);
-  box-shadow: 0 4px 24px #00990022;
+  background: linear-gradient(135deg, #007700 0%, #43A047 100%);
 }
 #result-section {
   margin-top: 24px;
@@ -85,23 +136,21 @@ h2 {
   flex-direction: column;
   align-items: center;
 }
+/* Back button */
 #back-btn {
-  font-size: 1.1em;
-  padding: 10px 32px;
-  border-radius: 10px;
-  background: #fff;
-  color: #009900;
-  border: 2px solid #009900;
-  font-weight: bold;
-  margin-bottom: 24px;
-  margin-top: 8px;
+  background: #FF9800;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 2px 8px #00990011;
-  transition: background 0.2s, color 0.2s;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  margin-bottom: 15px;
 }
+
 #back-btn:hover {
-  background: #009900;
-  color: #fff;
+  background: #F57C00;
 }
 .parcel-block {
   background: #fff;
@@ -331,22 +380,13 @@ h2 {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-@media (max-width: 900px) {
-  #timeline, .parcel-block {
-    max-width: 99vw;
-    padding-left: 2vw;
-    padding-right: 2vw;
+@media (max-width: 700px) {
+  #track-input {
+    width: 98vw;
+    font-size: 1.1em;
+    padding: 12px 8px;
   }
-  .timeline-bar-modern {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .timeline-signature-modern {
-    margin-left: 0;
-    margin-top: 18px;
-    min-width: 120px;
-  }
-} 
+}
 .timeline-bar-neo {
   display: flex;
   align-items: flex-start;
@@ -418,7 +458,7 @@ h2 {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  margin-bottom: 24px;
+  margin: 30px 0;
   gap: 0;
   position: relative;
   background: none;
@@ -427,6 +467,19 @@ h2 {
   flex-wrap: wrap;
   box-sizing: border-box;
 }
+
+/* Add line between timeline icons */
+.timeline-bar-inline::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  left: 10%;
+  width: 80%;
+  height: 4px;
+  background: linear-gradient(90deg, #F44336 0%, #FF9800 50%, #4CAF50 100%);
+  border-radius: 2px;
+  z-index: 1;
+}
 .timeline-step-inline {
   display: flex;
   flex-direction: column;
@@ -434,6 +487,7 @@ h2 {
   min-width: 80px;
   position: relative;
   z-index: 2;
+  margin: 0 15px;
 }
 .timeline-icon-inline {
   background: #fff;
@@ -445,7 +499,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
+  margin-bottom: 10px;
   transition: border 0.2s;
 }
 .timeline-step-inline.completed .timeline-icon-inline {
@@ -464,18 +518,14 @@ h2 {
   text-shadow: 0 1px 4px #fff8;
   transition: color 0.2s;
   white-space: nowrap;
+  text-align: center;
 }
 .timeline-label-inline.completed {
   color: #009900;
 }
 .timeline-connector-inline {
-  width: 48px;
-  height: 6px;
-  border-radius: 3px;
-  margin-bottom: 18px;
-  box-shadow: 0 1px 4px #0001;
-  transition: background 0.2s;
-} 
+  display: none;
+}
 .status-signature-row {
   display: flex;
   flex-direction: row;
@@ -545,15 +595,38 @@ h2 {
 .connector-watermark {
   filter: grayscale(1) brightness(1.5);
 } 
+/* Excel import button */
+#import-excel-btn {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+}
+
+#import-excel-btn:hover {
+  background: linear-gradient(135deg, #0d8aee 0%, #1565C0 100%);
+}
+
+/* PDF import button */
+#import-pdf-btn {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+}
+
+#import-pdf-btn:hover {
+  background: linear-gradient(135deg, #f32c1e 0%, #c62828 100%);
+}
+
+/* Print controls buttons */
 #print-controls {
   display: flex;
   gap: 16px;
   margin-bottom: 18px;
   justify-content: center;
+  flex-wrap: wrap;
 }
+
 #print-controls button {
   font-size: 1em;
-  padding: 8px 24px;
+  padding: 10px 20px;
   border-radius: 8px;
   border: 2px solid #009900;
   background: #fff;
@@ -561,11 +634,19 @@ h2 {
   font-weight: bold;
   cursor: pointer;
   box-shadow: 0 1px 4px #00990011;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s;
 }
+
 #print-controls button:hover {
   background: #009900;
   color: #fff;
+  transform: translateY(-2px);
+}
+
+#print-controls button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 #print-preview-modal {
   position: fixed;

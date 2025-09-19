@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เลือก Sheet</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Sarabun', 'Prompt', 'Segoe UI', Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      color: #2e7d32;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+    }
+
+    .sheet-list {
+      text-align: left;
+      margin: 20px 0;
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .sheet-item {
+      padding: 15px 20px;
+      margin: 0;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      word-break: break-word;
+      font-size: 0.95em;
+    }
+    
+    .sheet-item:last-child {
+      border-bottom: none;
+    }
+
+    .sheet-item:hover {
+      background: #e8f5e9;
+    }
+
+    .sheet-item.selected {
+      background: #c8e6c9;
+      font-weight: 600;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    button {
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.2s;
+      flex: 1;
+      max-width: 150px;
+    }
+
+    #confirm-btn {
+      background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+      color: white;
+    }
+
+    #cancel-btn {
+      background: linear-gradient(135deg, #757575 0%, #9e9e9e 100%);
+      color: white;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .message {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 1em;
+    }
+    
+    .error {
+      color: #c62828;
+      background: #ffebee;
+      border-radius: 8px;
+      margin: 10px 0;
+      padding: 15px;
+    }
+    
+    .loading {
+      color: #1976d2;
+      background: #e3f2fd;
+      border-radius: 8px;
+      margin: 10px 0;
+      padding: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>เลือก Sheet ที่ต้องการอ่านข้อมูล</h2>
+    <div class="sheet-list" id="sheet-list">
+      <div class="message loading" id="loading-message">กำลังโหลดรายการ sheet...</div>
+    </div>
+    <div class="buttons">
+      <button id="cancel-btn">ยกเลิก</button>
+      <button id="confirm-btn" disabled>ยืนยัน</button>
+    </div>
+  </div>
+
+  <script>
+    console.log('Sheet selector script loaded');
+    
+    // DOM elements
+    const sheetListEl = document.getElementById('sheet-list');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    
+    // State
+    let selectedSheet = null;
+    
+    // Function to populate sheet list
+    function populateSheetList(names) {
+      console.log('Populating sheet list with:', names);
+      
+      // Clear the sheet list
+      sheetListEl.innerHTML = '';
+      
+      // Handle empty sheet names
+      if (!names || !Array.isArray(names) || names.length === 0) {
+        sheetListEl.innerHTML = '<div class="message error">ไม่พบ sheet ใดๆ</div>';
+        confirmBtn.disabled = true;
+        return;
+      }
+      
+      // Create sheet items
+      names.forEach((name, index) => {
+        const item = document.createElement('div');
+        item.className = 'sheet-item';
+        item.textContent = name;
+        item.setAttribute('data-index', index);
+        
+        // Add click event
+        item.addEventListener('click', function() {
+          // Remove selected class from all items
+          document.querySelectorAll('.sheet-item').forEach(i => {
+            i.classList.remove('selected');
+          });
+          
+          // Add selected class to clicked item
+          this.classList.add('selected');
+          
+          // Enable confirm button and store selected sheet
+          confirmBtn.disabled = false;
+          selectedSheet = name;
+        });
+        
+        sheetListEl.appendChild(item);
+        
+        // Select first item by default
+        if (index === 0) {
+          item.classList.add('selected');
+          selectedSheet = name;
+          confirmBtn.disabled = false;
+        }
+      });
+    }
+    
+    // Handle confirm button click
+    function handleConfirm() {
+      console.log('Confirm button clicked, selected sheet:', selectedSheet);
+      if (selectedSheet) {
+        try {
+          if (window.thaipost && typeof window.thaipost.selectSheet === 'function') {
+            window.thaipost.selectSheet(selectedSheet);
+          } else {
+            console.error('thaipost.selectSheet is not available');
+            sheetListEl.innerHTML = '<div class="message error">เกิดข้อผิดพลาด: ไม่สามารถเลือก sheet ได้</div>';
+          }
+        } catch (error) {
+          console.error('Error selecting sheet:', error);
+          sheetListEl.innerHTML = '<div class="message error">เกิดข้อผิดพลาด: ' + error.message + '</div>';
+        }
+      }
+    }
+    
+    // Handle cancel button click
+    function handleCancel() {
+      console.log('Cancel button clicked');
+      try {
+        if (window.thaipost && typeof window.thaipost.cancelSheetSelection === 'function') {
+          window.thaipost.cancelSheetSelection();
+        } else {
+          console.error('thaipost.cancelSheetSelection is not available');
+          window.close(); // Fallback
+        }
+      } catch (error) {
+        console.error('Error cancelling selection:', error);
+        window.close(); // Fallback
+      }
+    }
+    
+    // Set up event listeners
+    confirmBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+    
+    // Try to get sheet names directly
+    console.log('Trying to get sheet names directly');
+    setTimeout(() => {
+      if (window.thaipost && typeof window.thaipost.getSheetNames === 'function') {
+        window.thaipost.getSheetNames()
+          .then(names => {
+            console.log('Received sheet names via getSheetNames:', names);
+            populateSheetList(names);
+          })
+          .catch(error => {
+            console.error('Error getting sheet names:', error);
+            sheetListEl.innerHTML = '<div class="message error">เกิดข้อผิดพลาดในการโหลดรายการ sheet: ' + error.message + '</div>';
+          });
+      } else {
+        console.log('getSheetNames not available, trying alternative methods');
+        // Try to use ipcRenderer if available
+        if (window.electronAPI && window.electronAPI.ipcRenderer) {
+          console.log('Using ipcRenderer');
+          try {
+            // Request sheet names
+            window.electronAPI.ipcRenderer.send('request-sheet-names');
+            
+            // Set up listener with a delay to ensure it's ready
+            setTimeout(() => {
+              if (window.electronAPI.ipcRenderer.on) {
+                window.electronAPI.ipcRenderer.on('sheet-names', (event, names) => {
+                  console.log('Received sheet names via ipcRenderer.on:', names);
+                  populateSheetList(names);
+                });
+              }
+            }, 100);
+          } catch (error) {
+            console.error('Error using ipcRenderer:', error);
+            sheetListEl.innerHTML = '<div class="message error">เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message + '</div>';
+          }
+        } else {
+          console.log('No available method to get sheet names');
+          sheetListEl.innerHTML = '<div class="message error">ไม่สามารถเชื่อมต่อกับระบบหลักได้</div>';
+        }
+      }
+    }, 300); // Small delay to ensure everything is loaded
+  </script>
+</body>
+</html>

@@ -11,6 +11,8 @@ const settingBtn = document.getElementById('setting-btn');
 const printPreviewModal = document.getElementById('print-preview-modal');
 const printPreviewPages = document.getElementById('print-preview-pages');
 const closePreviewBtn = document.getElementById('close-preview-btn');
+const importExcelBtn = document.getElementById('import-excel-btn');
+const importPDFBtn = document.getElementById('import-pdf-btn');
 
 let lastResults = [];
 
@@ -116,22 +118,204 @@ closePreviewBtn.onclick = () => {
   printPreviewModal.style.display = 'none';
 };
 
-printBtn.onclick = () => {
-  // สร้าง print-page ชั่วคราวแล้วสั่ง print
-  const printWindow = window.open('', '', 'width=900,height=1200');
-  printWindow.document.write('<html><head><title>Print</title><style>' +
-    document.querySelector('style').innerHTML +
-    '@media print { body *:not(.print-page) { display: none !important; } .print-page { display: block !important; page-break-after: always; } }' +
-    '</style></head><body>' +
-    lastResults.map((r, idx) => renderPrintPage(r, idx + 1, lastResults.length)).join('') +
-    '</body></html>');
-  printWindow.document.close();
-  printWindow.focus();
-  setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+printBtn.onclick = async () => {
+  try {
+    // Show loading indicator
+    const originalText = printBtn.textContent;
+    printBtn.textContent = 'กำลังจับภาพหน้าจอ...';
+    printBtn.disabled = true;
+    
+    // Show loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'pdf-loading-overlay';
+    loadingOverlay.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+        <div style="background: white; padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+          <div style="border: 4px solid #f3f3f3; border-top: 4px solid #009900; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+          <p style="font-size: 18px; margin: 0;">กำลังจับภาพหน้าจอ...</p>
+          <p style="font-size: 14px; margin: 10px 0 0; color: #666;">กรุณารอสักครู่</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+    document.body.appendChild(loadingOverlay);
+    
+    // Call the main process to capture all parcels and save as PDF
+    const result = await window.thaipost.captureAllParcels(lastResults.length);
+    
+    // Remove loading overlay
+    document.body.removeChild(loadingOverlay);
+    
+    // Restore button state
+    printBtn.textContent = originalText;
+    printBtn.disabled = false;
+    
+    if (!result.success) {
+      alert(result.message);
+    } else {
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.innerHTML = `
+        <div style="position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 15px; border-radius: 5px; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+          บันทึก PDF สำเร็จ!
+        </div>
+      `;
+      document.body.appendChild(successMessage);
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        if (successMessage.parentNode) {
+          successMessage.parentNode.removeChild(successMessage);
+        }
+      }, 3000);
+    }
+  } catch (error) {
+    // Remove loading overlay if it exists
+    const loadingOverlay = document.getElementById('pdf-loading-overlay');
+    if (loadingOverlay && loadingOverlay.parentNode) {
+      loadingOverlay.parentNode.removeChild(loadingOverlay);
+    }
+    
+    // Restore button state
+    printBtn.textContent = 'บันทึกเป็น PDF';
+    printBtn.disabled = false;
+    
+    console.error('Error capturing page:', error);
+    alert('เกิดข้อผิดพลาดในการจับภาพหน้าจอ: ' + error.message);
+  }
 };
 
 settingBtn.onclick = () => {
   alert('Setting: เลือกเครื่องพิมพ์, คุณภาพ, ขนาดกระดาษ ได้ที่ dialog ของระบบเมื่อสั่ง Print (window.print)\n\nหากต้องการบันทึกค่าตั้งค่าเพิ่มเติม สามารถพัฒนาเพิ่มได้ในอนาคต');
+};
+
+importExcelBtn.onclick = async () => {
+  try {
+    console.log('Import Excel button clicked');
+
+    // Show loading indicator
+    const originalText = importExcelBtn.textContent;
+    importExcelBtn.textContent = 'กำลังโหลดไฟล์...';
+    importExcelBtn.disabled = true;
+
+    console.log('Calling window.thaipost.importExcel()');
+    const result = await window.thaipost.importExcel();
+    console.log('Import result:', result);
+
+    // Restore button state
+    importExcelBtn.textContent = originalText;
+    importExcelBtn.disabled = false;
+
+    if (result.success) {
+      console.log('Tracking numbers found:', result.trackingNumbers);
+      // Put the tracking numbers in the input field
+      if (input) {
+        input.value = result.trackingNumbers.join('\n');
+        console.log('Input field updated with tracking numbers');
+      } else {
+        console.error('Input element not found');
+      }
+
+      // Show success message
+      alert(`นำเข้าเลขพัสดุ ${result.trackingNumbers.length} รายการเรียบร้อยแล้ว`);
+    } else if (result.sheetSelectionRequired) {
+      // Sheet selection dialog is already opened, do nothing here
+      console.log('Sheet selection dialog opened');
+    } else {
+      console.log('Import error:', result.message);
+      alert(result.message || 'ไม่สามารถอ่านไฟล์ Excel ได้');
+    }
+  } catch (error) {
+    console.error('Error importing Excel:', error);
+    importExcelBtn.textContent = 'นำเข้าไฟล์ Excel';
+    importExcelBtn.disabled = false;
+    alert('เกิดข้อผิดพลาดในการนำเข้าไฟล์ Excel: ' + error.message);
+  }
+};
+
+// Set up excel import result listener immediately
+console.log('Setting up excel-import-result listener');
+console.log('electronAPI available:', !!window.electronAPI);
+console.log('ipcRenderer available:', !!(window.electronAPI && window.electronAPI.ipcRenderer));
+
+if (window.electronAPI && window.electronAPI.ipcRenderer) {
+  try {
+    console.log('ipcRenderer.on function available:', typeof window.electronAPI.ipcRenderer.on);
+    window.electronAPI.ipcRenderer.on('excel-import-result', (event, result) => {
+      console.log('Received excel import result from main process:', result);
+
+      if (result.success) {
+        console.log('Tracking numbers found:', result.trackingNumbers);
+        const inputElement = document.getElementById('track-input');
+        console.log('Input element:', inputElement);
+        console.log('Input element value before:', inputElement ? inputElement.value : 'no input');
+
+        // Put the tracking numbers in the input field
+        if (inputElement) {
+          inputElement.value = result.trackingNumbers.join('\n');
+          console.log('Input element value after:', inputElement.value);
+          console.log('Successfully updated input field with tracking numbers');
+        } else {
+          console.error('Input element not found');
+        }
+
+        // Show success message
+        alert(`นำเข้าเลขพัสดุ ${result.trackingNumbers.length} รายการเรียบร้อยแล้ว`);
+      } else if (result.sheetSelectionRequired) {
+        // Sheet selection dialog is already opened, do nothing here
+        console.log('Sheet selection dialog opened');
+      } else {
+        console.log('Import error:', result.message);
+        alert(result.message || 'ไม่สามารถอ่านไฟล์ Excel ได้');
+      }
+    });
+    console.log('excel-import-result listener set up successfully');
+  } catch (error) {
+    console.error('Error setting up excel-import-result listener:', error);
+  }
+} else {
+  console.log('electronAPI not available for excel-import-result listener');
+}
+
+importPDFBtn.onclick = async () => {
+  try {
+    console.log('Import PDF button clicked');
+    
+    // Show loading indicator
+    const originalText = importPDFBtn.textContent;
+    importPDFBtn.textContent = 'กำลังโหลดไฟล์...';
+    importPDFBtn.disabled = true;
+    
+    console.log('Calling window.thaipost.importPDF()');
+    const result = await window.thaipost.importPDF();
+    console.log('Import result:', result);
+    
+    // Restore button state
+    importPDFBtn.textContent = originalText;
+    importPDFBtn.disabled = false;
+    
+    if (result.success) {
+      console.log('Tracking numbers found:', result.trackingNumbers);
+      // Put the tracking numbers in the input field
+      input.value = result.trackingNumbers.join('\n');
+      
+      // Show success message
+      alert(`นำเข้าเลขพัสดุ ${result.trackingNumbers.length} รายการเรียบร้อยแล้ว`);
+    } else {
+      console.log('Import error:', result.message);
+      alert(result.message || 'ไม่สามารถอ่านไฟล์ PDF ได้');
+    }
+  } catch (error) {
+    console.error('Error importing PDF:', error);
+    importPDFBtn.textContent = 'นำเข้าไฟล์ PDF';
+    importPDFBtn.disabled = false;
+    alert('เกิดข้อผิดพลาดในการนำเข้าไฟล์ PDF: ' + error.message);
+  }
 };
 
 function renderParcelTimeline({ barcode, items, error }, order, total) {
@@ -194,15 +378,17 @@ function renderParcelTimeline({ barcode, items, error }, order, total) {
       </div>
       <div class="timeline-label-inline${completed ? ' completed' : ''}${isWatermark ? ' label-watermark' : ''}" style="opacity:${isWatermark ? 0.3 : 1}">${step.label}</div>
     </div>`;
-    if (idx < stepMap.length - 1) {
-      const meta = connectorMeta[idx];
-      bar += `<div class="timeline-connector-inline${isWatermark ? ' connector-watermark' : ''}" style="background:${meta.color}; opacity:${(idx+1) > latestStatusIdx ? 0.2 : 1}"></div>`;
-    }
+    // Removed the connector logic since we're using a single line in CSS
   });
   bar += '</div>';
   let timelineRow = bar;
+  // Limit status items to fit on one page in PDF
+  let limitedItems = items.slice().reverse();
+  if (limitedItems.length > 8) {
+    limitedItems = limitedItems.slice(0, 8);
+  }
   let list = '<div class="status-list">';
-  items.slice().reverse().forEach(item => {
+  limitedItems.forEach(item => {
     list += `<div class="status-item${item.status_description === 'นำจ่ายสำเร็จ' ? ' delivered' : ''}">
       <div class="date">${item.status_date} | ${item.status_description}</div>
       <div class="desc">${item.status_detail}</div>
@@ -237,7 +423,7 @@ function renderPrintPage(r, order, total) {
       <div>ผลการนำจ่าย: ${latest.delivery_description || '-'}</div>
     `;
     if (latest.signature) {
-      content += `<div style="margin-top:18px;"><b>ลายเซ็นผู้รับ</b><br/><img src="${latest.signature}" style="max-width:260px;max-height:120px;border:2px solid #388e3c;border-radius:8px;"/></div>`;
+      content += `<div style="margin-top:18px;page-break-inside:avoid;"><b>ลายเซ็นผู้รับ</b><br/><img src="${latest.signature}" style="max-width:260px;max-height:120px;border:2px solid #388e3c;border-radius:8px;page-break-inside:avoid;"/></div>`;
     }
   } else if (r.error) {
     content += `<div style="color:#c62828;">เกิดข้อผิดพลาด: ${r.error}</div>`;
@@ -248,170 +434,17 @@ function renderPrintPage(r, order, total) {
   return content;
 }
 
-function showPrintPreviewModal(r, order, total) {
-  // Render HTML จริงของ .parcel-block
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = renderParcelTimeline(r, order, total);
-  tempDiv.querySelectorAll('.refresh-btn, .print-one-btn, .paper-preview-btn').forEach(el => el.remove());
-  const parcelBlockHtml = tempDiv.querySelector('.parcel-block').outerHTML;
-
-  // Modal preview
-  const modal = document.createElement('div');
-  modal.style = 'position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.25);z-index:2000;display:flex;align-items:center;justify-content:center;';
-  modal.innerHTML = `
-    <div style="position:relative;">
-      <button id="close-print-preview" style="position:absolute;right:12px;top:12px;z-index:10;">ปิด</button>
-      <button id="confirm-print" style="position:absolute;right:120px;top:12px;z-index:10;background:#009900;color:#fff;padding:8px 24px;border-radius:8px;border:none;font-weight:bold;box-shadow:0 1px 4px #00990011;">ยืนยัน</button>
-      <div class="print-preview-paper">${parcelBlockHtml}</div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  document.getElementById('close-print-preview').onclick = () => modal.remove();
-  document.getElementById('confirm-print').onclick = () => {
-    modal.remove();
-    printSingleParcelWithDialog(r, order, total);
-  };
-}
-
-function printSingleParcelWithDialog(r, order, total) {
-  // เปิด window ใหม่ทันที (ปลอดภัยกับ popup blocker)
-  const printWindow = window.open('', '', 'width=900,height=1200');
-  if (!printWindow) {
-    alert('กรุณาอนุญาต popup หรือปิด popup blocker');
-    return;
-  }
-
-  // ดึง style.css จาก <link> เดิม
-  const styleHref = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-    .map(link => link.href)
-    .find(href => href.includes('style.css'));
-  const styleLink = styleHref ? `<link rel="stylesheet" href="${styleHref}">` : '';
-
-  // Render HTML จริงของ .parcel-block
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = renderParcelTimeline(r, order, total);
-  tempDiv.querySelectorAll('.refresh-btn, .print-one-btn, .paper-preview-btn').forEach(el => el.remove());
-  const parcelBlockHtml = tempDiv.querySelector('.parcel-block').outerHTML;
-
-  // inject HTML ทันที
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Print Preview</title>
-        ${styleLink}
-        <style>
-          body { background: #fff !important; }
-          .print-preview-paper {
-            background: #fff;
-            width: 794px;
-            min-height: 1123px;
-            box-shadow: 0 4px 32px #0003;
-            margin: 0 auto;
-            padding: 32px 32px 32px 32px;
-            box-sizing: border-box;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-          }
-          @media print {
-            #print-btn { display: none !important; }
-            body *:not(.parcel-block) { display: none !important; }
-            .parcel-block { display: block !important; page-break-after: always; }
-            .parcel-block { transform-origin: top left; }
-          }
-        </style>
-      </head>
-      <body>
-        <div style="text-align:right;margin-bottom:16px;">
-          <button id="print-btn" style="font-size:1em;padding:8px 24px;border-radius:8px;background:#009900;color:#fff;border:none;font-weight:bold;">Print</button>
-        </div>
-        <div class="print-preview-paper">${parcelBlockHtml}</div>
-        <script>
-          document.getElementById('print-btn').onclick = function() {
-            window.print();
-          };
-        <\/script>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-}
-
-// ปรับ bindPrintOneButtons ให้เรียก showPrintPreviewModal
-function bindPrintOneButtons() {
-  document.querySelectorAll('.print-one-btn').forEach(btn => {
-    btn.onclick = () => {
-      // เปิด window ใหม่ทันที (ปลอดภัยกับ popup blocker)
-      const printWindow = window.open('', '', 'width=900,height=1200');
-      if (!printWindow) {
-        alert('กรุณาอนุญาต popup หรือปิด popup blocker');
-        return;
-      }
-      const barcode = btn.getAttribute('data-barcode');
-      const idx = lastResults.findIndex(r => r.barcode === barcode);
-      if (idx !== -1) {
-        // ดึง style.css
-        const styleHref = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-          .map(link => link.href)
-          .find(href => href.includes('style.css'));
-        const styleLink = styleHref ? `<link rel="stylesheet" href="${styleHref}">` : '';
-        // Render HTML จริง
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = renderParcelTimeline(lastResults[idx], idx + 1, lastResults.length);
-        tempDiv.querySelectorAll('.refresh-btn, .print-one-btn, .paper-preview-btn').forEach(el => el.remove());
-        const parcelBlockHtml = tempDiv.querySelector('.parcel-block').outerHTML;
-        // inject HTML
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Print Preview</title>
-              ${styleLink}
-              <style>
-                body { background: #fff !important; }
-                .print-preview-paper {
-                  background: #fff;
-                  width: 794px;
-                  min-height: 1123px;
-                  box-shadow: 0 4px 32px #0003;
-                  margin: 0 auto;
-                  padding: 32px 32px 32px 32px;
-                  box-sizing: border-box;
-                  border-radius: 8px;
-                  position: relative;
-                  overflow: hidden;
-                }
-                @media print {
-                  #print-btn { display: none !important; }
-                  body *:not(.parcel-block) { display: none !important; }
-                  .parcel-block { display: block !important; page-break-after: always; }
-                  .parcel-block { transform-origin: top left; }
-                }
-              </style>
-            </head>
-            <body>
-              <div style="text-align:right;margin-bottom:16px;">
-                <button id="print-btn" style="font-size:1em;padding:8px 24px;border-radius:8px;background:#009900;color:#fff;border:none;font-weight:bold;">Print</button>
-              </div>
-              <div class="print-preview-paper">${parcelBlockHtml}</div>
-              <script>
-                document.getElementById('print-btn').onclick = function() {
-                  window.print();
-                };
-              <\/script>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.focus();
-      }
-    };
-  });
-}
-// เรียก bindPrintOneButtons หลัง render timeline และ refresh
+// เรียก bindRefreshButtons หลัง render timeline และ refresh
 const origBindRefreshButtons = bindRefreshButtons;
 bindRefreshButtons = function() {
   origBindRefreshButtons();
   bindPrintOneButtons();
-}; 
+};
+
+function bindPrintOneButtons() {
+  document.querySelectorAll('.print-one-btn').forEach(btn => {
+    btn.onclick = () => {
+      alert('ฟังก์ชันนี้ถูกปิดใช้งานชั่วคราว');
+    };
+  });
+}
