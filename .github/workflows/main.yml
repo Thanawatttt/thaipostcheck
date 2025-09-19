@@ -1,9 +1,7 @@
 name: Build & Release Electron App
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build-and-release:
@@ -21,8 +19,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install Electron explicitly
+        run: npm install --save-dev electron
+
       - name: Build Electron App
-        run: npm run build  # สคริปต์ build ของคุณ
+        run: npm run build
 
       - name: Package Electron App
         run: npx electron-builder --win --x64 --publish never
@@ -30,7 +31,6 @@ jobs:
       - name: Create Release Tag
         id: tag
         run: |
-          # อ่าน tag ล่าสุด, +1 patch version
           latest_tag=$(git describe --tags --abbrev=0 || echo "v0.0.0")
           IFS='.' read -r major minor patch <<< "${latest_tag#v}"
           new_patch=$((patch + 1))
@@ -43,6 +43,7 @@ jobs:
           git push origin $new_tag
 
       - name: Create GitHub Release
+        id: create_release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag.outputs.tag }}
